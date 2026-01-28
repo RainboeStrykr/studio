@@ -18,7 +18,7 @@ interface EpisodeTrackerProps {
 }
 
 export function EpisodeTracker({ show }: EpisodeTrackerProps) {
-  const { toggleEpisodeWatched, isEpisodeWatched, getShowProgress } = useWatchlist();
+  const { toggleEpisodeWatched, isEpisodeWatched, getShowProgress, watchedEpisodes } = useWatchlist();
   const [currentProgress, setCurrentProgress] = useState(0);
 
   const totalEpisodes = show.seasons.reduce((acc, season) => acc + (season.episodes?.length || 0), 0);
