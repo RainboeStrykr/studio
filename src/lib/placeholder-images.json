@@ -1,3 +1,115 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "show-1-poster",
+      "description": "Poster for Starlight Odyssey",
+      "imageUrl": "https://images.unsplash.com/photo-1704394346996-97ce6756e22d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzY2ktZmklMjBwb3N0ZXJ8ZW58MHx8fHwxNzY5NjAyNTIyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "sci-fi poster"
+    },
+    {
+      "id": "show-1-backdrop",
+      "description": "Backdrop for Starlight Odyssey",
+      "imageUrl": "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxzcGFjZSUyMG5lYnVsYXxlbnwwfHx8fDE3Njk1ODQyNDB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "space nebula"
+    },
+    {
+      "id": "show-2-poster",
+      "description": "Poster for Cybernetic City",
+      "imageUrl": "https://images.unsplash.com/photo-1734076459123-bf27d91650db?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjeWJlcnB1bmslMjBwb3N0ZXJ8ZW58MHx8fHwxNzY5NjIxODQ0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "cyberpunk poster"
+    },
+    {
+      "id": "show-2-backdrop",
+      "description": "Backdrop for Cybernetic City",
+      "imageUrl": "https://images.unsplash.com/photo-1519608487953-e999c86e7455?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxmdXR1cmlzdGljJTIwY2l0eXxlbnwwfHx8fDE3Njk1MzUzODB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "futuristic city"
+    },
+    {
+      "id": "show-3-poster",
+      "description": "Poster for The King's Decree",
+      "imageUrl": "https://images.unsplash.com/photo-1761948245703-cbf27a3e7502?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxmYW50YXN5JTIwcG9zdGVyfGVufDB8fHx8MTc2OTUyMjYxNnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fantasy poster"
+    },
+    {
+      "id": "show-3-backdrop",
+      "description": "Backdrop for The King's Decree",
+      "imageUrl": "https://images.unsplash.com/photo-1747155925158-ee0ae97b1046?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxjYXN0bGUlMjBsYW5kc2NhcGV8ZW58MHx8fHwxNzY5NjIxODQ0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "castle landscape"
+    },
+    {
+      "id": "show-4-poster",
+      "description": "Poster for Baker Street Chronicles",
+      "imageUrl": "https://images.unsplash.com/photo-1758923530325-00b4ff765e9e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxteXN0ZXJ5JTIwcG9zdGVyfGVufDB8fHx8MTc2OTUyMjYxNXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "mystery poster"
+    },
+    {
+      "id": "show-4-backdrop",
+      "description": "Backdrop for Baker Street Chronicles",
+      "imageUrl": "https://images.unsplash.com/photo-1633098188847-a1552d8e177f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHx2aWN0b3JpYW4lMjBzdHJlZXR8ZW58MHx8fHwxNzY5NjIxODQ0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "victorian street"
+    },
+    {
+      "id": "show-5-poster",
+      "description": "Poster for The Corner Office",
+      "imageUrl": "https://images.unsplash.com/photo-1763054852348-7bb3e0b89e15?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxjb21lZHklMjBwb3N0ZXJ8ZW58MHx8fHwxNzY5NjIxODQ0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "comedy poster"
+    },
+    {
+      "id": "show-5-backdrop",
+      "description": "Backdrop for The Corner Office",
+      "imageUrl": "https://images.unsplash.com/photo-1623177623442-979c1e42c255?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxtb2Rlcm4lMjBvZmZpY2V8ZW58MHx8fHwxNzY5NTUxNDUzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "modern office"
+    },
+    {
+      "id": "show-6-poster",
+      "description": "Poster for Redwood Rangers",
+      "imageUrl": "https://images.unsplash.com/photo-1627782795730-1ae5d0d81c89?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxhZHZlbnR1cmUlMjBwb3N0ZXJ8ZW58MHx8fHwxNzY5NjIxODQ1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "adventure poster"
+    },
+    {
+      "id": "show-6-backdrop",
+      "description": "Backdrop for Redwood Rangers",
+      "imageUrl": "https://images.unsplash.com/photo-1448375240586-882707db888b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxmb3Jlc3QlMjBsYW5kc2NhcGV8ZW58MHx8fHwxNzY5NjAyODg4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "forest landscape"
+    },
+    {
+      "id": "show-7-poster",
+      "description": "Poster for Quantum Entanglement",
+      "imageUrl": "https://images.unsplash.com/photo-1704394347014-cda185df96a7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxzY2ktZmklMjBwb3N0ZXJ8ZW58MHx8fHwxNzY5NjAyNTIyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "sci-fi poster"
+    },
+    {
+      "id": "show-7-backdrop",
+      "description": "Backdrop for Quantum Entanglement",
+      "imageUrl": "https://images.unsplash.com/photo-1557264322-b44d383a2906?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxhYnN0cmFjdCUyMHNwYWNlfGVufDB8fHx8MTc2OTYxNDEyOHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "abstract space"
+    },
+    {
+      "id": "show-8-poster",
+      "description": "Poster for The Last Stand",
+      "imageUrl": "https://picsum.photos/seed/show8poster/400/600",
+      "imageHint": "western poster"
+    },
+    {
+      "id": "show-8-backdrop",
+      "description": "Backdrop for The Last Stand",
+      "imageUrl": "https://images.unsplash.com/photo-1666036891929-e28f4c9391e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxkZXNlcnQlMjBjYW55b258ZW58MHx8fHwxNzY5NjIxODQ0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "desert canyon"
+    },
+    {
+      "id": "avatar-1",
+      "imageUrl": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwZXJzb24lMjBmYWNlfGVufDB8fHx8MTc2OTUxODk0MXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person face"
+    },
+    {
+      "id": "avatar-2",
+      "imageUrl": "https://images.unsplash.com/photo-1675355291178-2d129f22c740?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cGVyc29uJTIwZmFjZXxlbnwwfHx8fDE3Njk1MTg5NDF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person face"
+    },
+    {
+      "id": "avatar-3",
+      "imageUrl": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwZXJzb24lMjBmYWNlfGVufDB8fHx8MTc2OTUxODk0MXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person face"
+    }
+  ]
 }
