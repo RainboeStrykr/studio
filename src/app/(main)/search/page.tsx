@@ -1,14 +1,28 @@
 'use client';
 
 import { ShowCard } from '@/components/show-card';
-import { searchShows } from '@/lib/data';
+import { searchShows } from '@/lib/tmdb';
 import { useSearchParams } from 'next/navigation';
 import { SearchX } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { TMDBShowSummary } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || '';
-  const results = searchShows(query);
+  const [results, setResults] = useState<TMDBShowSummary[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setIsLoading(true);
+    searchShows(query)
+      .then((data) => {
+        setResults(data.results);
+      })
+      .catch(console.error)
+      .finally(() => setIsLoading(false));
+  }, [query]);
 
   return (
     <div className="container mx-auto px-4 py-8 md:px-6">
@@ -17,11 +31,21 @@ export default function SearchPage() {
           Search Results
         </h1>
         <p className="text-muted-foreground">
-          Showing results for "{query}"
+          {query ? `Showing results for "${query}"` : 'Showing popular shows'}
         </p>
       </div>
 
-      {results.length === 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {[...Array(10)].map((_, i) => (
+             <div key={i} className="space-y-2">
+                <Skeleton className="h-[300px] md:h-[450px]" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+            </div>
+          ))}
+        </div>
+      ) : results.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted bg-card p-12 text-center">
             <SearchX className="h-12 w-12 text-muted-foreground" />
             <h3 className="mt-4 text-lg font-semibold">No results found</h3>

@@ -9,21 +9,23 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { useWatchlist } from '@/hooks/use-watchlist';
-import type { Show } from '@/lib/types';
+import type { TMDBShow } from '@/lib/types';
 import { useEffect, useState } from 'react';
 
 
 interface EpisodeTrackerProps {
-    show: Show;
+    show: TMDBShow;
 }
 
 export function EpisodeTracker({ show }: EpisodeTrackerProps) {
   const { toggleEpisodeWatched, isEpisodeWatched, getShowProgress } = useWatchlist();
-  const [progress, setProgress] = useState(0);
+  const [currentProgress, setCurrentProgress] = useState(0);
+
+  const totalEpisodes = show.seasons.reduce((acc, season) => acc + (season.episodes?.length || 0), 0);
 
   useEffect(() => {
-    setProgress(getShowProgress(show));
-  }, [getShowProgress, show]);
+    setCurrentProgress(getShowProgress(show.id, totalEpisodes));
+  }, [getShowProgress, show.id, totalEpisodes, watchedEpisodes, isEpisodeWatched]);
 
   if (show.seasons.length === 0) {
     return (
@@ -36,20 +38,20 @@ export function EpisodeTracker({ show }: EpisodeTrackerProps) {
         <div>
             <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium text-muted-foreground">Overall Progress</span>
-                <span className="text-sm font-bold">{Math.round(progress)}%</span>
+                <span className="text-sm font-bold">{Math.round(currentProgress)}%</span>
             </div>
-             <Progress value={progress} className="h-2" />
+             <Progress value={currentProgress} className="h-2" />
         </div>
         
-        <Accordion type="single" collapsible defaultValue="season-1">
+        <Accordion type="single" collapsible defaultValue={`season-${show.seasons[0]?.season_number}`}>
         {show.seasons.map((season) => (
-          <AccordionItem key={season.id} value={`season-${season.seasonNumber}`}>
+          <AccordionItem key={season.id} value={`season-${season.season_number}`}>
             <AccordionTrigger className="font-bold text-lg">
-              Season {season.seasonNumber}
+              Season {season.season_number}
             </AccordionTrigger>
             <AccordionContent>
               <div className="flex flex-col gap-4 pt-2">
-                {season.episodes.map((episode) => (
+                {season.episodes?.map((episode) => (
                   <div key={episode.id} className="flex items-start gap-4 p-2 rounded-md transition-colors hover:bg-muted/50">
                      <Checkbox
                         id={`episode-${episode.id}`}
@@ -59,15 +61,17 @@ export function EpisodeTracker({ show }: EpisodeTrackerProps) {
                       />
                     <div className="grid gap-1.5">
                       <label htmlFor={`episode-${episode.id}`} className="font-semibold cursor-pointer">
-                        {episode.episodeNumber}. {episode.title}
+                        {episode.episode_number}. {episode.name}
                       </label>
                       <p className="text-sm text-muted-foreground">
-                        {episode.synopsis}
+                        {episode.overview}
                       </p>
                       <div className="text-xs text-muted-foreground flex items-center gap-2">
-                          <span>Aired: {episode.airDate}</span>
-                          <span>&bull;</span>
-                          <span>{episode.duration}</span>
+                          <span>Aired: {episode.air_date}</span>
+                          {episode.runtime && <>
+                            <span>&bull;</span>
+                            <span>{episode.runtime} min</span>
+                          </>}
                       </div>
                     </div>
                   </div>

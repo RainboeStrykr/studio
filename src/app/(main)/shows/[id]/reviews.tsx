@@ -5,23 +5,37 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import type { Review, Show } from '@/lib/types';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
+import type { TMDBShow, Review, TMDBReview } from '@/lib/types';
+import { getImageUrl } from '@/lib/tmdb';
 import { StarRating } from '@/components/star-rating';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { User } from 'lucide-react';
+import React from 'react';
 
 interface ReviewsProps {
-  show: Show;
+  show: TMDBShow;
 }
 
-const ReviewCard = ({ review }: { review: Review }) => {
-  const avatar = PlaceHolderImages.find((img) => img.id === review.avatarUrl);
+const ReviewCard = ({ review }: { review: TMDBReview | Review }) => {
+  const isTmdbReview = 'author_details' in review;
+  const rating = isTmdbReview ? (review.author_details.rating ? review.author_details.rating / 2 : 0) : review.rating;
+  const avatarPath = isTmdbReview ? review.author_details.avatar_path : null;
+  
+  let avatarUrl = `https://picsum.photos/seed/${review.author}/40/40`;
+  if (avatarPath) {
+      if (avatarPath.startsWith('/')) {
+        avatarUrl = getImageUrl(avatarPath.substring(1), 'w200');
+      } else {
+        avatarUrl = `https://www.gravatar.com/avatar/${avatarPath}?s=40`;
+      }
+  }
+
+
   return (
     <div className="flex gap-4">
       <Avatar>
-        <AvatarImage src={avatar?.imageUrl} alt={review.author} />
+        <AvatarImage src={avatarUrl} alt={review.author} />
         <AvatarFallback>
             <User />
         </AvatarFallback>
@@ -29,7 +43,7 @@ const ReviewCard = ({ review }: { review: Review }) => {
       <div className="flex-1">
         <div className="flex items-center justify-between">
             <p className="font-semibold">{review.author}</p>
-            <StarRating rating={review.rating} readOnly />
+            {rating > 0 && <StarRating rating={rating} readOnly />}
         </div>
         <p className="text-muted-foreground mt-2">{review.content}</p>
       </div>
@@ -38,7 +52,7 @@ const ReviewCard = ({ review }: { review: Review }) => {
 };
 
 export function Reviews({ show }: ReviewsProps) {
-  const [reviews, setReviews] = useState<Review[]>(show.reviews);
+  const [reviews, setReviews] = useState<(TMDBReview | Review)[]>(show.reviews.results);
   const [newReview, setNewReview] = useState('');
   const [newRating, setNewRating] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,7 +65,7 @@ export function Reviews({ show }: ReviewsProps) {
         return;
     }
     setIsSubmitting(true);
-    // Simulate API call
+    
     setTimeout(() => {
         const submittedReview: Review = {
             id: `review-${Date.now()}`,
@@ -98,10 +112,10 @@ export function Reviews({ show }: ReviewsProps) {
         {reviews.length > 0 ? (
           <div className="space-y-6">
             {reviews.map((review, index) => (
-              <>
-                <ReviewCard key={review.id} review={review} />
+              <React.Fragment key={review.id}>
+                <ReviewCard review={review} />
                 {index < reviews.length - 1 && <Separator />}
-              </>
+              </React.Fragment>
             ))}
           </div>
         ) : (

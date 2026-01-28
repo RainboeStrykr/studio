@@ -1,8 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-import type { Show } from '@/lib/types';
+import { getImageUrl } from '@/lib/tmdb';
+import type { TMDBShowSummary } from '@/lib/types';
 
 import {
   Card,
@@ -14,11 +14,13 @@ import { StarRating } from '@/components/star-rating';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 interface ShowCardProps {
-  show: Show;
+  show: TMDBShowSummary;
 }
 
 export function ShowCard({ show }: ShowCardProps) {
-  const poster = PlaceHolderImages.find((img) => img.id === show.posterId);
+  const posterUrl = getImageUrl(show.poster_path, 'w400');
+  const rating = show.vote_average / 2;
+  const year = show.first_air_date ? show.first_air_date.substring(0, 4) : 'N/A';
 
   return (
     <Link href={`/shows/${show.id}`} className="group block">
@@ -26,22 +28,22 @@ export function ShowCard({ show }: ShowCardProps) {
         <CardHeader className="p-0">
           <AspectRatio ratio={2 / 3}>
             <Image
-              src={poster?.imageUrl || `https://picsum.photos/seed/${show.id}/400/600`}
-              alt={`Poster for ${show.title}`}
+              src={posterUrl}
+              alt={`Poster for ${show.name}`}
               className="object-cover transition-transform duration-300 group-hover:scale-105"
               fill
-              data-ai-hint={poster?.imageHint || 'movie poster'}
+              unoptimized={posterUrl.includes('placehold.co')}
             />
           </AspectRatio>
         </CardHeader>
         <CardContent className="p-4">
           <CardTitle className="font-headline text-lg truncate">
-            {show.title}
+            {show.name}
           </CardTitle>
           <div className="flex items-center gap-2 text-sm text-muted-foreground pt-1">
-            <StarRating rating={show.rating} readOnly />
-            <span>({show.rating.toFixed(1)})</span>
-            <span className="ml-auto">{show.year}</span>
+            <StarRating rating={rating} readOnly />
+            <span>({show.vote_average.toFixed(1)})</span>
+            <span className="ml-auto">{year}</span>
           </div>
         </CardContent>
       </Card>

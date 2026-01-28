@@ -1,8 +1,8 @@
 import { ShowCard } from '@/components/show-card';
-import { shows } from '@/lib/data';
+import { getPopularShows } from '@/lib/tmdb';
 
-export default function DiscoverPage() {
-  const popularShows = shows.slice(0, 8);
+export default async function DiscoverPage() {
+  const { results: popularShows } = await getPopularShows();
 
   return (
     <div className="container mx-auto px-4 py-8 md:px-6">

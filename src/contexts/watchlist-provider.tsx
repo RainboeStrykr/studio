@@ -1,29 +1,76 @@
 'use client';
 
 import type React from 'react';
-import { createContext, useState, useMemo, useCallback } from 'react';
-import type { Show } from '@/lib/types';
+import { createContext, useState, useMemo, useCallback, useEffect } from 'react';
+import type { WatchlistShow } from '@/lib/types';
 
 interface WatchlistContextType {
-  watchlist: Show[];
-  addToWatchlist: (show: Show) => void;
-  removeFromWatchlist: (showId: string) => void;
-  isOnWatchlist: (showId: string) => boolean;
-  watchedEpisodes: Record<string, Set<string>>;
-  toggleEpisodeWatched: (showId: string, episodeId: string) => void;
-  isEpisodeWatched: (showId:string, episodeId: string) => boolean;
-  getShowProgress: (showId: string) => number;
+  watchlist: WatchlistShow[];
+  addToWatchlist: (show: WatchlistShow) => void;
+  removeFromWatchlist: (showId: number) => void;
+  isOnWatchlist: (showId: number) => boolean;
+  watchedEpisodes: Record<number, Set<number>>;
+  toggleEpisodeWatched: (showId: number, episodeId: number) => void;
+  isEpisodeWatched: (showId:number, episodeId: number) => boolean;
+  getShowProgress: (showId: number, totalEpisodes: number) => number;
 }
 
 export const WatchlistContext = createContext<WatchlistContextType | undefined>(
   undefined
 );
 
-export function WatchlistProvider({ children }: { children: React.ReactNode }) {
-  const [watchlist, setWatchlist] = useState<Show[]>([]);
-  const [watchedEpisodes, setWatchedEpisodes] = useState<Record<string, Set<string>>>({});
+const isServer = typeof window === 'undefined';
 
-  const addToWatchlist = useCallback((show: Show) => {
+export function WatchlistProvider({ children }: { children: React.ReactNode }) {
+  const [watchlist, setWatchlist] = useState<WatchlistShow[]>(() => {
+    if (isServer) return [];
+    try {
+      const item = window.localStorage.getItem('watchlist');
+      return item ? JSON.parse(item) : [];
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
+  });
+
+  const [watchedEpisodes, setWatchedEpisodes] = useState<Record<number, Set<number>>>(() => {
+    if (isServer) return {};
+     try {
+      const item = window.localStorage.getItem('watchedEpisodes');
+      const parsed = item ? JSON.parse(item) : {};
+      Object.keys(parsed).forEach(showId => {
+        parsed[showId] = new Set(parsed[showId]);
+      });
+      return parsed;
+    } catch (error) {
+      console.error(error);
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('watchlist', JSON.stringify(watchlist));
+    } catch (error) {
+      console.error(error);
+    }
+  }, [watchlist]);
+
+  useEffect(() => {
+     try {
+        const serializable: Record<string, unknown> = {};
+        Object.keys(watchedEpisodes).forEach(showId => {
+            const showIdNum = Number(showId);
+            serializable[showIdNum] = Array.from(watchedEpisodes[showIdNum]);
+        });
+        window.localStorage.setItem('watchedEpisodes', JSON.stringify(serializable));
+    } catch (error) {
+        console.error(error);
+    }
+  }, [watchedEpisodes]);
+
+
+  const addToWatchlist = useCallback((show: WatchlistShow) => {
     setWatchlist((prev) => {
       if (prev.find((s) => s.id === show.id)) {
         return prev;
@@ -32,15 +79,15 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const removeFromWatchlist = useCallback((showId: string) => {
+  const removeFromWatchlist = useCallback((showId: number) => {
     setWatchlist((prev) => prev.filter((s) => s.id !== showId));
   }, []);
 
-  const isOnWatchlist = useCallback((showId: string) => {
+  const isOnWatchlist = useCallback((showId: number) => {
     return watchlist.some((s) => s.id === showId);
   }, [watchlist]);
 
-  const toggleEpisodeWatched = useCallback((showId: string, episodeId: string) => {
+  const toggleEpisodeWatched = useCallback((showId: number, episodeId: number) => {
     setWatchedEpisodes(prev => {
         const newWatched = {...prev};
         if (!newWatched[showId]) {
@@ -57,15 +104,14 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
   
-  const isEpisodeWatched = useCallback((showId: string, episodeId: string) => {
+  const isEpisodeWatched = useCallback((showId: number, episodeId: number) => {
     return !!watchedEpisodes[showId]?.has(episodeId);
   }, [watchedEpisodes]);
 
-  const getShowProgress = useCallback((show: Show) => {
-    const totalEpisodes = show.seasons.reduce((acc, season) => acc + season.episodes.length, 0);
+  const getShowProgress = useCallback((showId: number, totalEpisodes: number) => {
     if (totalEpisodes === 0) return 0;
     
-    const watchedCount = watchedEpisodes[show.id]?.size || 0;
+    const watchedCount = watchedEpisodes[showId]?.size || 0;
     return (watchedCount / totalEpisodes) * 100;
   }, [watchedEpisodes]);
 

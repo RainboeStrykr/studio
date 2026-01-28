@@ -5,9 +5,17 @@ import { Button } from '@/components/ui/button';
 import { useWatchlist } from '@/hooks/use-watchlist';
 import { Film } from 'lucide-react';
 import Link from 'next/link';
+import type { TMDBShowSummary } from '@/lib/types';
 
 export default function WatchlistPage() {
   const { watchlist } = useWatchlist();
+
+  const showsForCards: TMDBShowSummary[] = watchlist.map(item => ({
+      ...item,
+      overview: '',
+      backdrop_path: '',
+      genre_ids: []
+  }));
 
   return (
     <div className="container mx-auto px-4 py-8 md:px-6">
@@ -33,7 +41,7 @@ export default function WatchlistPage() {
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {watchlist.map((show) => (
+          {showsForCards.map((show) => (
             <ShowCard key={show.id} show={show} />
           ))}
         </div>

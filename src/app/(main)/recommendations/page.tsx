@@ -5,8 +5,8 @@ import { ShowCard } from '@/components/show-card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useWatchlist } from '@/hooks/use-watchlist';
-import { getShowsByTitle } from '@/lib/data';
-import type { Show } from '@/lib/types';
+import { getShowsByTitle } from '@/lib/tmdb';
+import type { TMDBShowSummary } from '@/lib/types';
 import { Sparkles, Bot } from 'lucide-react';
 import { useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,7 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function RecommendationsPage() {
   const { watchlist } = useWatchlist();
   const { toast } = useToast();
-  const [recommendations, setRecommendations] = useState<Show[]>([]);
+  const [recommendations, setRecommendations] = useState<TMDBShowSummary[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGenerate = async () => {
@@ -34,7 +34,7 @@ export default function RecommendationsPage() {
 
     try {
       const viewingHistory = watchlist
-        .map((show) => `${show.title} (genre: ${show.genres.join(', ')})`)
+        .map((show) => `${show.name} (genre: ${show.genres.join(', ')})`)
         .join(', ');
 
       const result = await generateShowRecommendations({
@@ -42,7 +42,7 @@ export default function RecommendationsPage() {
         numberOfRecommendations: 4,
       });
 
-      const recommendedShows = getShowsByTitle(result.recommendations);
+      const recommendedShows = await getShowsByTitle(result.recommendations);
       setRecommendations(recommendedShows);
     } catch (error) {
       console.error('Failed to generate recommendations:', error);
