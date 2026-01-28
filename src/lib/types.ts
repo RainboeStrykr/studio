@@ -64,12 +64,25 @@ export type TMDBShowSummary = {
 
 export type WatchlistShow = Pick<TMDBShowSummary, 'id' | 'name' | 'poster_path' | 'first_air_date' | 'vote_average'> & {
     genres: string[];
+    userId?: string;
 };
 
 export type Review = {
-  id: string;
+  id?: string;
+  userId: string;
+  tvShowId: number;
   author: string;
-  avatarUrl: string;
   rating: number;
   content: string;
+  reviewDate: string;
+  avatarUrl?: string;
 };
+
+export type FirestoreEpisodeProgress = {
+    id?: string;
+    userId: string;
+    tvShowId: number;
+    episodeId: number;
+    seasonNumber: number;
+    watchedDate: string;
+}

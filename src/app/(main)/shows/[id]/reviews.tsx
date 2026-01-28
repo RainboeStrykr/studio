@@ -5,45 +5,42 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import type { TMDBShow, Review, TMDBReview } from '@/lib/types';
+import type { TMDBShow, Review as ReviewType } from '@/lib/types';
 import { getImageUrl } from '@/lib/tmdb';
 import { StarRating } from '@/components/star-rating';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { User } from 'lucide-react';
+import { User as UserIcon } from 'lucide-react';
 import React from 'react';
+import {
+  useFirestore,
+  useUser,
+  useCollection,
+  useMemoFirebase,
+  addDocumentNonBlocking,
+} from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 interface ReviewsProps {
   show: TMDBShow;
 }
 
-const ReviewCard = ({ review }: { review: TMDBReview | Review }) => {
-  const isTmdbReview = 'author_details' in review;
-  const rating = isTmdbReview ? (review.author_details.rating ? review.author_details.rating / 2 : 0) : review.rating;
-  const avatarPath = isTmdbReview ? review.author_details.avatar_path : null;
-  
-  let avatarUrl = `https://picsum.photos/seed/${review.author}/40/40`;
-  if (avatarPath) {
-      if (avatarPath.startsWith('/')) {
-        avatarUrl = getImageUrl(avatarPath.substring(1), 'w200');
-      } else {
-        avatarUrl = `https://www.gravatar.com/avatar/${avatarPath}?s=40`;
-      }
-  }
-
+const ReviewCard = ({ review }: { review: ReviewType }) => {
+  const avatarUrl =
+    review.avatarUrl || `https://picsum.photos/seed/${review.author}/40/40`;
 
   return (
     <div className="flex gap-4">
       <Avatar>
         <AvatarImage src={avatarUrl} alt={review.author} />
         <AvatarFallback>
-            <User />
+          <UserIcon />
         </AvatarFallback>
       </Avatar>
       <div className="flex-1">
         <div className="flex items-center justify-between">
-            <p className="font-semibold">{review.author}</p>
-            {rating > 0 && <StarRating rating={rating} readOnly />}
+          <p className="font-semibold">{review.author}</p>
+          <StarRating rating={review.rating} readOnly />
         </div>
         <p className="text-muted-foreground mt-2">{review.content}</p>
       </div>
@@ -52,35 +49,79 @@ const ReviewCard = ({ review }: { review: TMDBReview | Review }) => {
 };
 
 export function Reviews({ show }: ReviewsProps) {
-  const [reviews, setReviews] = useState<(TMDBReview | Review)[]>(show.reviews.results);
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+
+  const reviewsQuery = useMemoFirebase(
+    () =>
+      firestore
+        ? collection(firestore, 'tv_shows', String(show.id), 'reviews')
+        : null,
+    [firestore, show.id]
+  );
+  const { data: firestoreReviews, isLoading } = useCollection<ReviewType>(reviewsQuery);
+
   const [newReview, setNewReview] = useState('');
   const [newRating, setNewRating] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if(newRating === 0 || !newReview) {
-        toast({ title: "Incomplete Review", description: "Please provide a rating and a review.", variant: "destructive" });
-        return;
+    if (!user) {
+      toast({
+        title: 'Authentication Required',
+        description: 'You must be logged in to leave a review.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (newRating === 0 || !newReview) {
+      toast({
+        title: 'Incomplete Review',
+        description: 'Please provide a rating and a review.',
+        variant: 'destructive',
+      });
+      return;
     }
     setIsSubmitting(true);
-    
-    setTimeout(() => {
-        const submittedReview: Review = {
-            id: `review-${Date.now()}`,
-            author: "You",
-            avatarUrl: 'avatar-3',
-            rating: newRating,
-            content: newReview,
-        };
-        setReviews([submittedReview, ...reviews]);
-        setNewReview('');
-        setNewRating(0);
-        setIsSubmitting(false);
-        toast({ title: "Review Submitted!", description: "Thanks for sharing your thoughts." });
-    }, 1000);
+
+    const reviewToSubmit: ReviewType = {
+      userId: user.uid,
+      tvShowId: show.id,
+      author: user.displayName || user.email || 'Anonymous',
+      avatarUrl: user.photoURL || undefined,
+      rating: newRating,
+      content: newReview,
+      reviewDate: new Date().toISOString(),
+    };
+
+    const reviewsColRef = collection(firestore, 'tv_shows', String(show.id), 'reviews');
+    addDocumentNonBlocking(reviewsColRef, reviewToSubmit);
+
+    setNewReview('');
+    setNewRating(0);
+    setIsSubmitting(false);
+    toast({
+      title: 'Review Submitted!',
+      description: 'Thanks for sharing your thoughts.',
+    });
   };
+
+  const allReviews = useMemo(() => {
+    const tmdbReviews: ReviewType[] = show.reviews.results.map(r => ({
+      id: r.id,
+      author: r.author,
+      content: r.content,
+      rating: (r.author_details.rating || 0) / 2,
+      reviewDate: 'N/A', // TMDB doesn't provide this
+      tvShowId: show.id,
+      userId: 'tmdb',
+      avatarUrl: r.author_details.avatar_path ? getImageUrl(r.author_details.avatar_path, 'w200') : undefined,
+    }));
+    return [...(firestoreReviews || []), ...tmdbReviews];
+  }, [firestoreReviews, show.reviews.results, show.id]);
+
 
   return (
     <div className="space-y-8">
@@ -89,17 +130,18 @@ export function Reviews({ show }: ReviewsProps) {
         <Card>
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             <div className="flex items-center gap-4">
-                <p className="font-medium">Your Rating:</p>
-                <StarRating rating={newRating} onRatingChange={setNewRating} />
+              <p className="font-medium">Your Rating:</p>
+              <StarRating rating={newRating} onRatingChange={setNewRating} />
             </div>
             <Textarea
-              placeholder="Share your thoughts on the show..."
+              placeholder={user ? "Share your thoughts on the show..." : "Please log in to leave a review."}
               value={newReview}
               onChange={(e) => setNewReview(e.target.value)}
               rows={4}
+              disabled={!user || isSubmitting}
             />
             <div className="flex justify-end">
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={!user || isSubmitting}>
                 {isSubmitting ? 'Submitting...' : 'Submit Review'}
               </Button>
             </div>
@@ -109,12 +151,14 @@ export function Reviews({ show }: ReviewsProps) {
 
       <div>
         <h3 className="font-headline text-2xl font-bold mb-4">User Reviews</h3>
-        {reviews.length > 0 ? (
+        {isLoading ? (
+            <p>Loading reviews...</p>
+        ) : allReviews.length > 0 ? (
           <div className="space-y-6">
-            {reviews.map((review, index) => (
-              <React.Fragment key={review.id}>
+            {allReviews.map((review, index) => (
+              <React.Fragment key={review.id || index}>
                 <ReviewCard review={review} />
-                {index < reviews.length - 1 && <Separator />}
+                {index < allReviews.length - 1 && <Separator />}
               </React.Fragment>
             ))}
           </div>

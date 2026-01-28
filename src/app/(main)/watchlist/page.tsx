@@ -6,9 +6,31 @@ import { useWatchlist } from '@/hooks/use-watchlist';
 import { Film } from 'lucide-react';
 import Link from 'next/link';
 import type { TMDBShowSummary } from '@/lib/types';
+import { useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Logo } from '@/components/icons';
+
 
 export default function WatchlistPage() {
-  const { watchlist } = useWatchlist();
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+  const { watchlist, isWatchlistLoading } = useWatchlist();
+
+   useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.replace('/login');
+    }
+  }, [user, isUserLoading, router]);
+
+  if (isUserLoading || !user) {
+     return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Logo className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   const showsForCards: TMDBShowSummary[] = watchlist.map(item => ({
       ...item,
@@ -28,7 +50,17 @@ export default function WatchlistPage() {
         </p>
       </div>
 
-      {watchlist.length === 0 ? (
+      {isWatchlistLoading ? (
+         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {[...Array(5)].map((_, i) => (
+             <div key={i} className="space-y-2">
+                <Skeleton className="h-[300px] md:h-[450px]" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+            </div>
+          ))}
+        </div>
+      ) : watchlist.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted bg-card p-12 text-center">
           <Film className="h-12 w-12 text-muted-foreground" />
           <h3 className="mt-4 text-lg font-semibold">Your watchlist is empty</h3>

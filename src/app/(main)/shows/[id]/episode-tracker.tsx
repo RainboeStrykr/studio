@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { useWatchlist } from '@/hooks/use-watchlist';
 import type { TMDBShow } from '@/lib/types';
 import { useEffect, useState } from 'react';
+import { useUser } from '@/firebase';
 
 
 interface EpisodeTrackerProps {
@@ -18,6 +19,7 @@ interface EpisodeTrackerProps {
 }
 
 export function EpisodeTracker({ show }: EpisodeTrackerProps) {
+  const { user } = useUser();
   const { toggleEpisodeWatched, isEpisodeWatched, getShowProgress, watchedEpisodes } = useWatchlist();
   const [currentProgress, setCurrentProgress] = useState(0);
 
@@ -25,7 +27,13 @@ export function EpisodeTracker({ show }: EpisodeTrackerProps) {
 
   useEffect(() => {
     setCurrentProgress(getShowProgress(show.id, totalEpisodes));
-  }, [getShowProgress, show.id, totalEpisodes, watchedEpisodes, isEpisodeWatched]);
+  }, [getShowProgress, show.id, totalEpisodes, watchedEpisodes]);
+
+  const handleToggleWatched = (episodeId: number, seasonNumber: number) => {
+    if (user) {
+      toggleEpisodeWatched(show.id, episodeId, seasonNumber);
+    }
+  }
 
   if (show.seasons.length === 0) {
     return (
@@ -56,8 +64,9 @@ export function EpisodeTracker({ show }: EpisodeTrackerProps) {
                      <Checkbox
                         id={`episode-${episode.id}`}
                         checked={isEpisodeWatched(show.id, episode.id)}
-                        onCheckedChange={() => toggleEpisodeWatched(show.id, episode.id)}
+                        onCheckedChange={() => handleToggleWatched(episode.id, season.season_number)}
                         className="mt-1"
+                        disabled={!user}
                       />
                     <div className="grid gap-1.5">
                       <label htmlFor={`episode-${episode.id}`} className="font-semibold cursor-pointer">

@@ -86,11 +86,9 @@ service cloud.firestore {
      * @principle Restricts access to a user's own data tree and prevents user enumeration.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId);
+      allow get, update, delete: if isOwner(userId);
       allow list: if false;
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(userId);
+      allow create: if isOwner(userId);
     }
 
     /**
@@ -120,20 +118,16 @@ service cloud.firestore {
       // CRITICAL: Cannot implement owner-only writes. The 'Episode' entity is missing an 'ownerId' or 'authorId' field.
       allow create, update, delete: if false; // TODO: Add admin validation or an ownership field to the Episode schema to enable writes.
     }
-
+    
     /**
      * @description Controls access to a user's personal watchlist.
-     * @path /users/{userId}/watchlist/{watchlistItemId}
+     * @path /users/{userId}/watchlist/{tvShowId}
      * @allow (create) An authenticated user adding a show to their own watchlist.
      * @deny (get) An authenticated user trying to read items from another user's watchlist.
      * @principle Enforces document ownership for all read and write operations.
      */
-    match /users/{userId}/watchlist/{watchlistItemId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && isCreatingOwnDocument(userId);
-      allow update: if isExistingOwner(userId) && userIdIsImmutable();
-      allow delete: if isExistingOwner(userId);
+    match /users/{userId}/watchlist/{tvShowId} {
+      allow get, list, create, update, delete: if isOwner(userId);
     }
 
     /**
@@ -144,26 +138,21 @@ service cloud.firestore {
      * @principle Enforces document ownership for all read and write operations.
      */
     match /users/{userId}/episode_progress/{episodeProgressId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && isCreatingOwnDocument(userId);
-      allow update: if isExistingOwner(userId) && userIdIsImmutable();
-      allow delete: if isExistingOwner(userId);
+      allow get, list, create, update, delete: if isOwner(userId);
     }
-
+    
     /**
-     * @description Controls access to a user's reviews of TV shows.
-     * @path /users/{userId}/reviews/{reviewId}
-     * @allow (create) An authenticated user writing a review under their own profile.
-     * @deny (update) An authenticated user trying to modify another user's review.
-     * @principle Enforces document ownership for all read and write operations.
+     * @description Controls access to user reviews of TV shows.
+     * @path /tv_shows/{tvShowId}/reviews/{reviewId}
+     * @allow (list, get) Anyone can read reviews.
+     * @allow (create) Authenticated user creating their own review.
+     * @allow (update, delete) The user who created the review.
+     * @principle Allows public reading of reviews but restricts writing to the owner.
      */
-    match /users/{userId}/reviews/{reviewId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && isCreatingOwnDocument(userId);
-      allow update: if isExistingOwner(userId) && userIdIsImmutable();
-      allow delete: if isExistingOwner(userId);
+    match /tv_shows/{tvShowId}/reviews/{reviewId} {
+        allow list, get: if true;
+        allow create: if isSignedIn() && isCreatingOwnDocument(request.auth.uid);
+        allow update, delete: if isSignedIn() && isOwner(resource.data.userId);
     }
   }
 }

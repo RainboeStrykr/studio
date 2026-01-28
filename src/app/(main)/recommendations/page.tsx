@@ -8,14 +8,33 @@ import { useWatchlist } from '@/hooks/use-watchlist';
 import { getShowsByTitle } from '@/lib/tmdb';
 import type { TMDBShowSummary } from '@/lib/types';
 import { Sparkles, Bot } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
+import { Logo } from '@/components/icons';
 
 export default function RecommendationsPage() {
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
   const { watchlist } = useWatchlist();
   const { toast } = useToast();
   const [recommendations, setRecommendations] = useState<TMDBShowSummary[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.replace('/login');
+    }
+  }, [user, isUserLoading, router]);
+
+   if (isUserLoading || !user) {
+     return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Logo className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   const handleGenerate = async () => {
     setIsLoading(true);

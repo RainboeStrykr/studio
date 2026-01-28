@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { FirebaseClientProvider } from '@/firebase';
 
 export const metadata: Metadata = {
   title: 'Series Tracker',
@@ -25,7 +26,9 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="font-body antialiased" suppressHydrationWarning={true}>{children}</body>
+      <body className="font-body antialiased" suppressHydrationWarning={true}>
+        <FirebaseClientProvider>{children}</FirebaseClientProvider>
+      </body>
     </html>
   );
 }

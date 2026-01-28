@@ -6,19 +6,9 @@
       "type": "object",
       "description": "Represents a user of the Series Tracker application.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the user.",
-          "format": "uuid"
-        },
         "username": {
           "type": "string",
           "description": "The user's username."
-        },
-        "email": {
-          "type": "string",
-          "description": "The user's email address.",
-          "format": "email"
         },
         "joinDate": {
           "type": "string",
@@ -27,9 +17,7 @@
         }
       },
       "required": [
-        "id",
         "username",
-        "email",
         "joinDate"
       ]
     },
@@ -105,31 +93,39 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "WatchlistItem",
       "type": "object",
-      "description": "Represents a TV show in a user's watchlist.",
+      "description": "Represents a TV show in a user's watchlist, storing a summary.",
       "properties": {
         "id": {
-          "type": "string",
-          "description": "Unique identifier for the watchlist item."
+          "type": "number",
+          "description": "The TMDB ID of the TV show."
         },
         "userId": {
           "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N WatchlistItem)"
+          "description": "Reference to User."
         },
-        "tvShowId": {
-          "type": "string",
-          "description": "Reference to TvShow. (Relationship: TvShow 1:N WatchlistItem)"
+        "name": {
+          "type": "string"
         },
-        "addedDate": {
-          "type": "string",
-          "description": "The date the TV show was added to the watchlist.",
-          "format": "date-time"
+        "poster_path": {
+          "type": "string"
+        },
+        "first_air_date": {
+          "type": "string"
+        },
+        "vote_average": {
+          "type": "number"
+        },
+        "genres": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "required": [
         "id",
         "userId",
-        "tvShowId",
-        "addedDate"
+        "name"
       ]
     },
     "EpisodeProgress": {
@@ -138,17 +134,19 @@
       "type": "object",
       "description": "Represents a user's progress on a specific episode.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the episode progress."
-        },
         "userId": {
           "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N EpisodeProgress)"
+          "description": "Reference to User."
         },
         "episodeId": {
-          "type": "string",
-          "description": "Reference to Episode. (Relationship: Episode 1:N EpisodeProgress)"
+          "type": "number",
+          "description": "Reference to Episode."
+        },
+        "tvShowId": {
+            "type": "number"
+        },
+        "seasonNumber": {
+            "type": "number"
         },
         "watchedDate": {
           "type": "string",
@@ -157,9 +155,9 @@
         }
       },
       "required": [
-        "id",
         "userId",
         "episodeId",
+        "tvShowId",
         "watchedDate"
       ]
     },
@@ -169,23 +167,19 @@
       "type": "object",
       "description": "Represents a user's review of a TV show.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the review."
-        },
         "userId": {
           "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N Review)"
+          "description": "Reference to User."
         },
         "tvShowId": {
-          "type": "string",
-          "description": "Reference to TvShow. (Relationship: TvShow 1:N Review)"
+          "type": "number",
+          "description": "Reference to TvShow."
         },
         "rating": {
           "type": "number",
           "description": "The user's rating of the TV show (e.g., 1-5 stars)."
         },
-        "reviewText": {
+        "content": {
           "type": "string",
           "description": "The user's written review of the TV show."
         },
@@ -193,15 +187,21 @@
           "type": "string",
           "description": "The date the review was written.",
           "format": "date-time"
+        },
+        "author": {
+            "type": "string"
+        },
+        "avatarUrl": {
+            "type": "string"
         }
       },
       "required": [
-        "id",
         "userId",
         "tvShowId",
         "rating",
-        "reviewText",
-        "reviewDate"
+        "content",
+        "reviewDate",
+        "author"
       ]
     }
   },
@@ -212,7 +212,7 @@
     ]
   },
   "firestore": {
-    "structure": [
+     "structure": [
       {
         "path": "/users/{userId}",
         "definition": {
@@ -220,7 +220,7 @@
           "schema": {
             "$ref": "#/backend/entities/User"
           },
-          "description": "Stores user profile information.  Uses path-based ownership for all user-specific data.",
+          "description": "Stores user profile information. Uses path-based ownership for all user-specific data.",
           "params": [
             {
               "name": "userId",
@@ -266,21 +266,21 @@
         }
       },
       {
-        "path": "/users/{userId}/watchlist/{watchlistItemId}",
+        "path": "/users/{userId}/watchlist/{tvShowId}",
         "definition": {
           "entityName": "WatchlistItem",
           "schema": {
             "$ref": "#/backend/entities/WatchlistItem"
           },
-          "description": "Stores watchlist items for each user.  Uses path-based ownership.",
+          "description": "Stores watchlist items for each user. Uses path-based ownership. The document ID is the TMDB show ID.",
           "params": [
             {
               "name": "userId",
               "description": "The unique identifier of the user."
             },
             {
-              "name": "watchlistItemId",
-              "description": "The unique identifier of the watchlist item."
+              "name": "tvShowId",
+              "description": "The unique identifier of the TV show (from TMDB)."
             }
           ]
         }
@@ -300,23 +300,23 @@
             },
             {
               "name": "episodeProgressId",
-              "description": "The unique identifier of the episode progress."
+              "description": "The unique identifier of the episode progress item."
             }
           ]
         }
       },
       {
-        "path": "/users/{userId}/reviews/{reviewId}",
+        "path": "/tv_shows/{tvShowId}/reviews/{reviewId}",
         "definition": {
           "entityName": "Review",
           "schema": {
             "$ref": "#/backend/entities/Review"
           },
-          "description": "Stores user reviews of TV shows. Uses path-based ownership.",
+          "description": "Stores user reviews of TV shows.",
           "params": [
             {
-              "name": "userId",
-              "description": "The unique identifier of the user."
+              "name": "tvShowId",
+              "description": "The unique identifier of the TV show."
             },
             {
               "name": "reviewId",
@@ -325,7 +325,6 @@
           ]
         }
       }
-    ],
-    "reasoning": "The Firestore structure is designed to support the core features of the Series Tracker application, focusing on user authentication and data organization for TV shows, watchlists, episode tracking, and reviews.  The primary focus is on path-based ownership for user-specific data (watchlists, episode progress, reviews) and leveraging this for secure and efficient data access. \n\nAuthorization Independence (CRITICAL): Path-based ownership automatically ensures authorization independence, eliminating the need for `get()` calls in security rules. For instance, the `/users/{userId}/watchlist/{watchlistItemId}` structure inherently ties watchlist items to a specific user, making authorization straightforward based on the request's authentication state (`request.auth.uid`).\n\nClarity of Intent (Debuggability): The structure clearly separates user-owned data into subcollections under `/users/{userId}`, making the intent of ownership explicit.\n\nDBAC (No Custom Claims): Authorization relies solely on `request.auth.uid` and path-based ownership.\n\nQAPs (Rules are not Filters): The path-based ownership strategy enables secure list operations. Listing watchlist items under `/users/{userId}/watchlist` only requires checking if `request.auth.uid == userId`, preventing unauthorized data access.\n\nInvariants:  Ownership of watchlists, episode progress, and reviews is inherently enforced by the path structure, preventing unauthorized modification.\n\nSegregation: Data with different access needs are kept in separate collections.  User-specific data is stored under the `/users/{userId}` path, while general TV show data is stored in the `/tv_shows` collection.\n\nAccess Modeling:  Path-based ownership is used for user-owned data (watchlists, episode progress, reviews). This access modeling strategy aligns with the principle of least privilege and promotes efficient security rule evaluation.\n\nData Clarity and Predictability:  The schema enforces strict naming conventions (e.g., `userId` for user identifiers), creating a predictable and consistent data structure.  There is no use of a status field or dynamic keys."
+    ]
   }
 }
