@@ -1,0 +1,169 @@
+/**
+ * Core Philosophy: This ruleset enforces a strict user-ownership model. All data
+ * that is private or specific to a user (like their watchlist, reviews, and
+ * episode progress) is stored in subcollections under that user's unique document
+ * in the `/users` collection. This path-based ownership is the primary mechanism
+ * for securing data.
+ *
+ * Data Structure: The data is organized into two main branches:
+ * 1. `/users/{userId}`: Contains a user's profile and all their related private
+ *    data in subcollections (watchlist, episode_progress, reviews).
+ * 2. `/tv_shows/{tvShowId}`: A top-level collection for public TV show and episode
+ *    information that can be read by any user.
+ *
+ * Key Security Decisions:
+ * - User Isolation: Users can only read and write to their own data tree under
+ *   `/users/{userId}`. They cannot see or modify another user's data.
+ * - Public Data: TV show and episode information is public and read-only for all
+ *   clients. Writes to this collection are currently disabled, as the data is
+ *   assumed to be managed by a trusted backend process or admin.
+ * - No User Listing: It is not possible to list all documents in the `/users`
+ *   collection, protecting user privacy.
+ * - Self-Creation: A signed-in user is allowed to create their own user profile
+ *   document, which is a necessary step for new user onboarding.
+ *
+ * Denormalization for Authorization: The structure inherently denormalizes ownership
+ * by using the user's UID in the document path (`/users/{userId}/...`). This
+ * avoids costly `get()` calls in rules, making them fast and efficient. For
+ * example, securing a watchlist item only requires checking the `userId` from
+ * the path against the authenticated user's UID.
+ *
+ * Structural Segregation: The ruleset leverages separate collections for data
+ * with different access patterns. Private, user-owned data is segregated into
+ * user-specific subcollections, while public, read-only data resides in the
+ * top-level `/tv_shows` collection.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for common authorization logic.
+    
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the authenticated user's UID matches the provided userId.
+     * This is the primary function for validating ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks for ownership on an existing document. Used for update/delete
+     * operations to prevent acting on non-existent data.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * Validates that the userId field within a document being created matches
+     * the user's auth UID. This enforces relational integrity.
+     */
+    function isCreatingOwnDocument(userId) {
+      return request.resource.data.userId == userId;
+    }
+
+    /**
+     * Validates that the userId field within a document cannot be changed
+     * during an update.
+     */
+    function userIdIsImmutable() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+
+    /**
+     * @description Controls access to user profile documents.
+     * @path /users/{userId}
+     * @allow (create) A new user creating their own profile: `auth.uid == userId`.
+     * @deny (get) An authenticated user trying to read another user's profile.
+     * @principle Restricts access to a user's own data tree and prevents user enumeration.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Controls access to the public collection of TV shows.
+     * @path /tv_shows/{tvShowId}
+     * @allow (get) Any user, authenticated or not, reading a TV show's details.
+     * @deny (create) Any client attempting to create a new TV show document.
+     * @principle Provides public read access while restricting writes to trusted sources.
+     */
+    match /tv_shows/{tvShowId} {
+      allow get: if true;
+      allow list: if true;
+      // CRITICAL: Cannot implement owner-only writes. The 'TvShow' entity is missing an 'ownerId' or 'authorId' field.
+      allow create, update, delete: if false; // TODO: Add admin validation or an ownership field to the TvShow schema to enable writes.
+    }
+
+    /**
+     * @description Controls access to the public collection of TV show episodes.
+     * @path /tv_shows/{tvShowId}/episodes/{episodeId}
+     * @allow (list) Any user, authenticated or not, listing episodes for a given show.
+     * @deny (create) Any client attempting to create a new episode document.
+     * @principle Provides public read access while restricting writes to trusted sources.
+     */
+    match /tv_shows/{tvShowId}/episodes/{episodeId} {
+      allow get: if true;
+      allow list: if true;
+      // CRITICAL: Cannot implement owner-only writes. The 'Episode' entity is missing an 'ownerId' or 'authorId' field.
+      allow create, update, delete: if false; // TODO: Add admin validation or an ownership field to the Episode schema to enable writes.
+    }
+
+    /**
+     * @description Controls access to a user's personal watchlist.
+     * @path /users/{userId}/watchlist/{watchlistItemId}
+     * @allow (create) An authenticated user adding a show to their own watchlist.
+     * @deny (get) An authenticated user trying to read items from another user's watchlist.
+     * @principle Enforces document ownership for all read and write operations.
+     */
+    match /users/{userId}/watchlist/{watchlistItemId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isCreatingOwnDocument(userId);
+      allow update: if isExistingOwner(userId) && userIdIsImmutable();
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Controls access to a user's viewing progress for episodes.
+     * @path /users/{userId}/episode_progress/{episodeProgressId}
+     * @allow (create) An authenticated user marking an episode as watched for themselves.
+     * @deny (list) An authenticated user trying to list the viewing progress of another user.
+     * @principle Enforces document ownership for all read and write operations.
+     */
+    match /users/{userId}/episode_progress/{episodeProgressId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isCreatingOwnDocument(userId);
+      allow update: if isExistingOwner(userId) && userIdIsImmutable();
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Controls access to a user's reviews of TV shows.
+     * @path /users/{userId}/reviews/{reviewId}
+     * @allow (create) An authenticated user writing a review under their own profile.
+     * @deny (update) An authenticated user trying to modify another user's review.
+     * @principle Enforces document ownership for all read and write operations.
+     */
+    match /users/{userId}/reviews/{reviewId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isCreatingOwnDocument(userId);
+      allow update: if isExistingOwner(userId) && userIdIsImmutable();
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+}
