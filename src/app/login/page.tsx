@@ -22,6 +22,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Logo } from '@/components/icons';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const auth = useAuth();
