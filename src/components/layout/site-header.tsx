@@ -45,7 +45,7 @@ export function SiteHeader() {
         <Link href="/" className="hidden items-center gap-2 md:flex">
           <Logo className="h-6 w-6 text-primary" />
           <span className="font-headline text-lg font-bold">
-            Series Tracker
+            Showboxd
           </span>
         </Link>
       </div>

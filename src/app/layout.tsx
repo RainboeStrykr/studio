@@ -3,7 +3,7 @@ import './globals.css';
 import { FirebaseClientProvider } from '@/firebase';
 
 export const metadata: Metadata = {
-  title: 'Series Tracker',
+  title: 'Showboxd',
   description: 'Track your favorite TV shows, get recommendations, and more.',
 };
 

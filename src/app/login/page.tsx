@@ -74,7 +74,7 @@ export default function LoginPage() {
         <div className="flex justify-center mb-6">
             <Link href="/" className="flex items-center gap-2">
                 <Logo className="h-8 w-8 text-primary" />
-                <span className="font-headline text-2xl font-bold">Series Tracker</span>
+                <span className="font-headline text-2xl font-bold">Showboxd</span>
             </Link>
         </div>
         <Tabs defaultValue="sign-in" className="w-full">

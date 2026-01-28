@@ -36,7 +36,7 @@ export function SiteSidebar() {
         <Link href="/" className="flex items-center gap-2">
           <Logo className="h-7 w-7 text-primary" />
           <span className="font-headline text-xl font-bold">
-            Series Tracker
+            Showboxd
           </span>
         </Link>
       </SidebarHeader>
