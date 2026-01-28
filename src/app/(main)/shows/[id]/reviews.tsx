@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import type { TMDBShow, Review as ReviewType } from '@/lib/types';
 import { getImageUrl } from '@/lib/tmdb';
 import { StarRating } from '@/components/star-rating';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { User as UserIcon } from 'lucide-react';
 import React from 'react';
