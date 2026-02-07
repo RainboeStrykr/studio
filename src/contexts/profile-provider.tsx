@@ -6,7 +6,6 @@ import React, {
     useCallback,
     useEffect,
     useState,
-    useRef,
 } from 'react';
 import type { UserProfile, RecentActivity, WatchlistShow, TMDBShowSummary } from '@/lib/types';
 import {
@@ -40,7 +39,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     const { user } = useUser();
     const firestore = useFirestore();
     const { watchlist, watchedEpisodes } = useWatchlist();
-    const hasInitialized = useRef(false);
 
     // Firestore-backed profile
     const profileDocRef = useMemoFirebase(
@@ -56,26 +54,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
     const [favouriteShows, setFavouriteShows] = useState<TMDBShowSummary[]>([]);
     const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
-
-    // Initialize profile if it doesn't exist (only once per user session)
-    useEffect(() => {
-        if (user && firestore && !isProfileLoading && !profile && !hasInitialized.current) {
-            console.log('Initializing profile for user:', user.uid);
-            hasInitialized.current = true;
-            const docRef = doc(firestore, 'users', user.uid, 'profile', 'info');
-            const initialProfile: UserProfile = {
-                favourites: [],
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            };
-            setDocumentNonBlocking(docRef, initialProfile, { merge: true });
-        }
-
-        // Reset initialization flag when user changes
-        if (!user) {
-            hasInitialized.current = false;
-        }
-    }, [user, firestore, profile, isProfileLoading]);
 
     // Log profile changes
     useEffect(() => {
@@ -162,26 +140,24 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
     const addFavourite = useCallback(
         (showId: number) => {
-            if (!user || !firestore || !profile) {
-                console.error('addFavourite: Missing dependencies', {
-                    user: !!user,
-                    firestore: !!firestore,
-                    profile: !!profile
-                });
+            if (!user || !firestore) {
+                console.error('addFavourite: Missing user or firestore');
                 return;
             }
 
-            if (profile.favourites.length >= 5) {
+            const currentFavourites = profile?.favourites || [];
+
+            if (currentFavourites.length >= 5) {
                 console.warn('addFavourite: Max limit reached');
                 return;
             }
 
-            if (profile.favourites.includes(showId)) {
+            if (currentFavourites.includes(showId)) {
                 console.warn('addFavourite: Already in favourites');
                 return;
             }
 
-            const updatedFavourites = [...profile.favourites, showId];
+            const updatedFavourites = [...currentFavourites, showId];
             const docRef = doc(firestore, 'users', user.uid, 'profile', 'info');
 
             console.log('addFavourite: Saving to Firestore', {
@@ -190,11 +166,17 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
                 updatedFavourites
             });
 
-            setDocumentNonBlocking(docRef, {
-                ...profile,
+            const dataToSave: Partial<UserProfile> = {
                 favourites: updatedFavourites,
                 updatedAt: new Date().toISOString(),
-            }, { merge: true });
+            };
+
+            // Only add createdAt if profile doesn't exist
+            if (!profile) {
+                dataToSave.createdAt = new Date().toISOString();
+            }
+
+            setDocumentNonBlocking(docRef, dataToSave, { merge: true });
         },
         [user, firestore, profile]
     );
@@ -206,7 +188,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
             const updatedFavourites = profile.favourites.filter(id => id !== showId);
             const docRef = doc(firestore, 'users', user.uid, 'profile', 'info');
             setDocumentNonBlocking(docRef, {
-                ...profile,
                 favourites: updatedFavourites,
                 updatedAt: new Date().toISOString(),
             }, { merge: true });
@@ -220,7 +201,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
             const docRef = doc(firestore, 'users', user.uid, 'profile', 'info');
             setDocumentNonBlocking(docRef, {
-                ...profile,
                 favourites: newOrder,
                 updatedAt: new Date().toISOString(),
             }, { merge: true });
@@ -230,15 +210,23 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
     const updateBio = useCallback(
         (bio: string) => {
-            if (!user || !firestore || !profile) return;
+            if (!user || !firestore) return;
 
             const truncatedBio = bio.slice(0, 120);
             const docRef = doc(firestore, 'users', user.uid, 'profile', 'info');
-            setDocumentNonBlocking(docRef, {
-                ...profile,
+
+            const dataToSave: Partial<UserProfile> = {
                 bio: truncatedBio,
                 updatedAt: new Date().toISOString(),
-            }, { merge: true });
+            };
+
+            // Only add createdAt if profile doesn't exist
+            if (!profile) {
+                dataToSave.createdAt = new Date().toISOString();
+                dataToSave.favourites = [];
+            }
+
+            setDocumentNonBlocking(docRef, dataToSave, { merge: true });
         },
         [user, firestore, profile]
     );
