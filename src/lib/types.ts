@@ -63,8 +63,8 @@ export type TMDBShowSummary = {
 };
 
 export type WatchlistShow = Pick<TMDBShowSummary, 'id' | 'name' | 'poster_path' | 'first_air_date' | 'vote_average'> & {
-    genres: string[];
-    userId?: string;
+  genres: string[];
+  userId?: string;
 };
 
 export type Review = {
@@ -79,10 +79,29 @@ export type Review = {
 };
 
 export type FirestoreEpisodeProgress = {
-    id?: string;
-    userId: string;
-    tvShowId: number;
-    episodeId: number;
-    seasonNumber: number;
-    watchedDate: string;
+  id?: string;
+  userId: string;
+  tvShowId: number;
+  episodeId: number;
+  seasonNumber: number;
+  watchedDate: string;
 }
+
+export type UserProfile = {
+  id?: string;
+  bio?: string;
+  favourites: number[];  // TMDB show IDs, max 5
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type RecentActivity = {
+  show: WatchlistShow;
+  status: 'WATCHING' | 'COMPLETED';
+  lastEpisode?: {
+    seasonNumber: number;
+    episodeNumber: number;
+  };
+  updatedAt: string;
+};
+

@@ -6,6 +6,7 @@ import {
   Compass,
   Sparkles,
   Home,
+  User,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -25,6 +26,7 @@ const menuItems = [
   { href: '/', label: 'Discover', icon: Compass },
   { href: '/watchlist', label: 'Watchlist', icon: Bookmark },
   { href: '/recommendations', label: 'For You', icon: Sparkles },
+  { href: '/profile', label: 'Profile', icon: User },
 ];
 
 export function SiteSidebar() {

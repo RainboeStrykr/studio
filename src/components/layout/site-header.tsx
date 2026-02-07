@@ -68,7 +68,7 @@ export function SiteHeader() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
               <Avatar>
-                 {user.photoURL && <AvatarImage src={user.photoURL} alt={user.displayName || 'User'} />}
+                {user.photoURL && <AvatarImage src={user.photoURL} alt={user.displayName || 'User'} />}
                 <AvatarFallback>
                   <User />
                 </AvatarFallback>
@@ -78,8 +78,10 @@ export function SiteHeader() {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>{user.isAnonymous ? 'Anonymous User' : user.email}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem disabled>Profile</DropdownMenuItem>
             <DropdownMenuItem disabled>Settings</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/profile">Profile</Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
