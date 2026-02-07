@@ -124,7 +124,7 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
 
   const isOnWatchlist = useCallback(
     (showId: number) => {
-      return !!watchlist?.some((s) => s.id === showId);
+      return !!watchlist?.some((s) => Number(s.id) === Number(showId));
     },
     [watchlist]
   );
